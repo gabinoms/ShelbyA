@@ -14,6 +14,7 @@ cbd_cash1 = CallbackData('cash', 'jump', 'but', 'value', 'min_am')
 load_dotenv(find_dotenv())
 api_key = os.getenv('JAPIKEY')
 private_key = os.getenv('JAPITOKEN')
+webh_url = os.getenv('WH_URL')
 bot = Bot(os.getenv('TOKEN'), parse_mode='HTML')
 
 storage = MemoryStorage()
