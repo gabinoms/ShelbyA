@@ -2,7 +2,7 @@ from engine import scheduler
 from config import ADMIN
 
 async def run(message):
-    if message.chat.id in ADMIN:        
+    if str(message.chat.id) in ADMIN:        
         scheduler.start()
         await message.answer('scheduler starts...')
     else:
@@ -10,7 +10,7 @@ async def run(message):
 
 
 async def pause(message):
-    if message.chat.id in ADMIN:        
+    if str(message.chat.id) in ADMIN:        
         scheduler.pause()
         await message.answer('scheduler paused...')
     else:
@@ -18,7 +18,7 @@ async def pause(message):
 
 
 async def resume(message):
-    if message.chat.id in ADMIN:        
+    if str(message.chat.id) in ADMIN:        
         scheduler.resume()
         await message.answer('scheduler resumed...')
     else:
@@ -26,7 +26,7 @@ async def resume(message):
 
 
 async def stop(message):
-    if message.chat.id in ADMIN:        
+    if str(message.chat.id) in ADMIN:        
         scheduler.shutdown()
         await message.answer('stopped...')
     else:

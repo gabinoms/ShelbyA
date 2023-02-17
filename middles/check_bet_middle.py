@@ -12,14 +12,16 @@ from config import CHAT
 class BetMiddle(BaseMiddleware):
     
     async def on_pre_process_message(self, message: types.Message, data:dict):
+        if message.text != None:
 
-        if await check_jumper() == 0:
-            if "bet" in message.text.lower() and message.chat.type == 'supergroup':
-                await bot.delete_message(CHAT, message.message_id)
-                raise CancelHandler()
-            elif "bet" in message.text.lower():
-                await bot.delete_message(message.from_user.id,message.message_id)
-                raise CancelHandler()
+
+            if await check_jumper() == 0:
+                if "bet" in message.text.lower() and message.chat.type == 'supergroup':
+                    await bot.delete_message(CHAT, message.message_id)
+                    raise CancelHandler()
+                elif "bet" in message.text.lower():
+                    await bot.delete_message(message.from_user.id,message.message_id)
+                    raise CancelHandler()
 
     async def on_process_callback_query(self, call: types.CallbackQuery, data:dict):
 
