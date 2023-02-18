@@ -1,7 +1,12 @@
-from flask import Flask, request
+from flask import Flask
 from threading import Thread
 
 app = Flask('__name__')
+
+@app.route('/')
+def home():
+  return "I'm alive"
+
 
 def run():
 	from waitress import serve
