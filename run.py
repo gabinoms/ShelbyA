@@ -8,7 +8,7 @@ import datas
 from serv import keep_alive
 
 async def on_startup(_):
-    await bot.set_webhook(webh_url)
+    #await bot.set_webhook(webh_url)
     # logger = logging.getLogger('peewee')
     # logger.addHandler(logging.StreamHandler())
     # logger.setLevel(logging.DEBUG)
@@ -27,14 +27,15 @@ async def on_startup(_):
 
 
 if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True,on_startup=on_startup)
 
-    keep_alive()    
-    executor.start_webhook(
-        dispatcher=dp,
-        webhook_path="",
-        on_startup=on_startup,
-        skip_updates=True,
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
-        )
+    # keep_alive()    
+    # executor.start_webhook(
+    #     dispatcher=dp,
+    #     webhook_path="",
+    #     on_startup=on_startup,
+    #     skip_updates=True,
+    #     host="0.0.0.0",
+    #     port=int(os.environ.get("PORT", 5000))
+    #     )
 

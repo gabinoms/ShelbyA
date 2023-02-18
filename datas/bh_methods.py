@@ -17,7 +17,7 @@ async def usr_add(uid, uname):
 	with dbase.atomic():
 		data = [(uid,'DEMO',1000,1),
 				(uid,'TON',0,2),
-				(uid,'BOLT',0,2),
+				(uid,'VIRUS',0,2),
 				(uid,'KISS',0,2),
 				(uid,'****',0,2)]
 		
@@ -109,10 +109,10 @@ async def update_balance(uid, value):
 		res.save()
 
 
-async def balance_withdraw(uid,value):
+async def balance_withdraw(uid,token,value):
 		with dbase:
 			#User.update(user_balance = User.user_balance+value).where(User.user_id==uid).execute()
-			res = Ubalance.select().join(User).where(User.user_id==uid,Ubalance.marker==1).get()
+			res = Ubalance.select().join(User).where(User.user_id==uid,Ubalance.token==token).get()
 			res.amount-=abs(value)
 			res.save()
 

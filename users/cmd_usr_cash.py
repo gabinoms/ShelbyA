@@ -1,7 +1,8 @@
 # from aiogram.utils.exceptions import MessageNotModified
 # from contextlib import suppress
 import asyncio
-#from aiogram.utils.exceptions import CancelledError
+import datetime
+
 
 from aiogram.dispatcher import filters
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -17,7 +18,7 @@ from .kb_user.players_kb import kb_main
 from datas.bh_methods import usr_info, dep_to_balance, check_balance_selected, balance_withdraw, set_deposit, set_deposit_status, set_withdraw
 from text.interfaces import profile_info
 
-from admin.payments_methods import dep_create, dep_status_check, get_main_balance, with_create, with_status
+from admin.payments_methods_alt import dep_create, dep_status_check, get_min_dep, get_min_with, get_main_balance, with_create
 
 
 class PSG(StatesGroup):
@@ -40,11 +41,11 @@ async def kb(url):
 	return kb_confirm
 
 
-async def kb_w(url):
-	kb_withdraw = IKM(
-		inline_keyboard=[[IKB('🎁',url=url)]
-		])
-	return kb_withdraw
+# async def kb_w(url):
+# 	kb_withdraw = IKM(
+# 		inline_keyboard=[[IKB('🎁',url=url)]
+# 		])
+# 	return kb_withdraw
 
 
 async def to_cancel(message,state:FSMContext):
@@ -68,7 +69,7 @@ async def to_deposit(call):
 async def deposit_token(call,callback_data:dict,state:FSMContext):	
 
 	value = callback_data['value']
-	min_amount = callback_data['min_am']
+	
 
 	if value == 'back':
 		
@@ -77,9 +78,11 @@ async def deposit_token(call,callback_data:dict,state:FSMContext):
 		await state.finish()
 
 	else:
+
+		min_amount = await get_min_dep(value)
 		async with state.proxy() as data:
-			data['cash'] = callback_data['value']
-			data['min_amnt']=callback_data['min_am']
+			data['cash'] = value
+			data['min_amnt'] = min_amount
 			await bot.edit_message_text(f'укажите сумму депозита, (min - {min_amount} {value})\n (<i>введите <code>cancel</code>, чтобы отменить текущее действие</i>)', call.from_user.id, call.message.message_id)
 		await PSG.next()
 			
@@ -87,44 +90,33 @@ async def deposit_token(call,callback_data:dict,state:FSMContext):
 async def deposit_amount(message,state:FSMContext):
 
 	async with state.proxy() as data:
-		value = data['cash']#token
+		token_name = data['cash']#token
 		min_amnt_dep = float(data['min_amnt'])
 		usr_amnt_dep = float(message.text)#amount of deposit
+
 	if usr_amnt_dep <= min_amnt_dep:
 		amount = min_amnt_dep
 
 	else:
+		
 		amount = usr_amnt_dep
 
-	inv_id,ext_link = await dep_create(value,amount)
-	await set_deposit(message.from_user.id,inv_id,value,amount,message.date,'pending')
+	inv_id, ext_link = await dep_create(token_name,amount)
+	await set_deposit(message.from_user.id,inv_id,token_name,amount,message.date,'pending')
 
 	id_del = await bot.send_message(message.from_user.id,f'<b>ID</b> <code>{inv_id}</code>')
-	await bot.send_message(message.from_user.id,f'вы собираетесь внести депозит на сумму {amount} {value}\nсохраните id транзакции',reply_markup=await kb(ext_link))
+	await bot.send_message(message.from_user.id,f'вы собираетесь внести депозит на сумму {amount} {token_name}\nсохраните id транзакции\n через 30 сек вы будете автоматически перенаправлены в главное меню',reply_markup=await kb(ext_link))
 
-	await asyncio.sleep(15)
+	await asyncio.sleep(30)
 
-	# curret_state = await state.get_state()
-	# if curret_state is None:
-	# 	return
-	# else:
+	a = await dep_status_check(inv_id)
+	
 
-	try:
-		a = await dep_status_check(inv_id)
-
-
-	except asyncio.CancelledError:
-
-		await asyncio.sleep(1)
-		a = await dep_status_check(inv_id)
-
-
-
-	if a['payments']!=[]:
-		dep_uid = a['payments'][0]['telegram_id']
-		dep_amount = a['payments'][0]['amount']
-		dep_currency = a['currency'].upper()
-		dep_date = a['created']
+	if a['data']['payments']!=[]:
+		dep_uid = a['data']['payments'][0]['userId']
+		dep_amount = a['data']['payments'][0]['paymentAmount']
+		dep_currency = a['data']['currency']
+		dep_date = a['data']['payments'][0]['paid']
 
 
 		await set_deposit_status(dep_uid,inv_id,'paid')
@@ -153,6 +145,7 @@ async def withdraw_token(call,callback_data:dict,state:FSMContext):
 
 	value = callback_data['value']
 	
+	
 	if value == 'back':
 		
 		res = await usr_info(call.from_user.id)
@@ -160,17 +153,31 @@ async def withdraw_token(call,callback_data:dict,state:FSMContext):
 		await state.finish()
 
 	else:
+
+		min_with = await get_min_with(value)
 		async with state.proxy() as data:
 			res = await check_balance_selected(call.from_user.id,value)
 			
-			if float(res)!=0.0:
+			if float(res)!=0.0 and float(res) < float(min_with):
+
+				await call.answer(f'минимальная сумма вывода - {min_with} {value}\n (чтобы вывести {res} {value} - напишиите администратору)',show_alert=True)
+
+
+				res1 = await usr_info(call.from_user.id)
+				await bot.edit_message_text(f'{await profile_info(call.from_user.id,res1[0],res1[1],res1[2],res1[3],res1[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res1[2]))
+				await state.finish()
+
+			elif float(res)!=0.0 and float(res) >= float(min_with):
+
+
 				data['with_token'] = value
+				data['with_min_amount'] = min_with
 				data['with_max_amount'] = res
-				await bot.edit_message_text(f'укажите сумму вывода, (max - {res} {value})\n (<i>введите <code>cancel</code>, чтобы отменить текущее действие</i>)', call.from_user.id, call.message.message_id)
+				await bot.edit_message_text(f'укажите сумму вывода, (min - {min_with} {value}, max - {res} {value})\n (<i>введите <code>cancel</code>, чтобы отменить текущее действие</i>)', call.from_user.id, call.message.message_id)
+				await WSG.next()
 			else:
 				await bot.edit_message_text('Инсуффисиент фундс, ало\n\n', call.from_user.id, call.message.message_id)
 				await bot.send_message(call.from_user.id,'выберите валюту',reply_markup = tokens_kb)
-		await WSG.next()
 
 
 async def withdraw_amount(message,state:FSMContext):
@@ -178,53 +185,57 @@ async def withdraw_amount(message,state:FSMContext):
 	async with state.proxy() as data:
 		token = data['with_token']#token
 		usr_amnt_with = float(message.text)#amount
+		min_amnt_with = float(data['with_min_amount'])#minimum amount of withdraw
 		max_amnt_with = float(data['with_max_amount'])#user_balance
+		user_id = message.from_user.id
+
+		trs_id = str(datetime.datetime.now().timestamp())
 
 		main_balance = await get_main_balance(token)#main_balance
 
+		if max_amnt_with < main_balance:
 
-		if usr_amnt_with < main_balance:
-			if usr_amnt_with > max_amnt_with:
-				amount = max_amnt_with
-			else:
-				amount = usr_amnt_with
+			if usr_amnt_with > min_amnt_with:
 
-			try:
-				chid, ext_link = await with_create(token,amount)
-				chst = await with_status(chid)
-				await set_withdraw(message.from_user.id, chid, token, amount, message.date, chst)
+				if usr_amnt_with > max_amnt_with:
+					amount = max_amnt_with
+				else:
+					amount = usr_amnt_with
 
-			except asyncio.CancelledError:
+			elif usr_amnt_with <= min_amnt_with:
 
-				await asyncio.sleep(1)
-				chid, ext_link = await with_create(token,amount)
-				chst = await with_status(chid)
-				await set_withdraw(message.from_user.id, chid, token, amount, message.date, chst)
+				amount = min_amnt_with
 
 
-			await balance_withdraw(message.from_user.id,amount)
-			await message.answer('вывод подтвержден',reply_markup = await kb_w(ext_link))
-			await asyncio.sleep(10)
-			
-			chst = await with_status(chid)
-			await set_withdraw(message.from_user.id, chid, token, amount, message.date, chst)
-			
+
+
+
+			chst = await with_create(user_id, trs_id, token, amount)
+			await set_withdraw(user_id, chst['data']['id'], chst['data']['currency'], chst['data']['amount'], message.date, chst['success'])
+			await balance_withdraw(user_id,token,amount)
+
+
+
+			await asyncio.sleep(5)
 			res = await usr_info(message.from_user.id)
 			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+			
 
 
 
 		elif usr_amnt_with == main_balance:
 			await message.answer('вронг дата. телл зе админ абоут ит')
-			await bot.send_message(ADMIN, 'som happened wrong')
+			await bot.send_message(ADMIN, 'some happened wrong. user balance equal as main balance')
 			res = await usr_info(message.from_user.id)
 			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+
 			
 		else:
 			await message.answer('вронг дата. телл зе админ абоут ит')
-			await bot.send_message(ADMIN, ' big amount of withdraw.som happened wrong')
+			await bot.send_message(ADMIN, ' big amount of withdraw.some happened wrong')
 			res = await usr_info(message.from_user.id)
 			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+		await state.finish()
 
 
 

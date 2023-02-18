@@ -13,6 +13,7 @@ from text.interfaces import profile_info, settings_info
 
 from aiogram.utils.exceptions import MessageNotModified
 from contextlib import suppress
+from admin.payments_methods_alt import get_main_balance
 
 
 
@@ -24,6 +25,9 @@ async def to_begin(message):
         res = await usr_info(message.from_user.id)
         await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
         await bot.delete_message(message.chat.id,message.message_id)
+        # a=await get_main_balance('virus')
+        # print(type(a))
+
 
 
        

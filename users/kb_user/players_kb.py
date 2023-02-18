@@ -29,8 +29,8 @@ async def kb_settings(status):
 	if status=='DEMO':
 		kb = IKM(
 			inline_keyboard=[
-			[IKB('вкл CAsH',callback_data='pref:3:empty'),
-			 IKB('⬅️ назад',callback_data='pref:3:main')]
+			[IKB('вкл CAsH',callback_data='pref:3:empty')],
+			[IKB('⬅️ назад',callback_data='pref:3:main')]
 			])
 	elif status=='CAsH':
 		kb = IKM(

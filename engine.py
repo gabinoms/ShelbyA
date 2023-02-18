@@ -9,11 +9,12 @@ from dotenv import load_dotenv, find_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 cbd_cash = CallbackData('pref', 'but', 'value')
-cbd_cash1 = CallbackData('cash', 'jump', 'but', 'value', 'min_am')
+cbd_cash1 = CallbackData('cash', 'jump', 'but', 'value')
 
 load_dotenv(find_dotenv())
 api_key = os.getenv('JAPIKEY')
 private_key = os.getenv('JAPITOKEN')
+rocketpay_key = os.getenv('ROCKETPAY')
 webh_url = os.getenv('WH_URL')
 bot = Bot(os.getenv('TOKEN'), parse_mode='HTML')
 
