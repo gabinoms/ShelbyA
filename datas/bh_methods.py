@@ -1,6 +1,24 @@
 from .bh_clases import dbase, Race, Bet, Ubalance, Udeposit, Uwithdraw, User
 
 
+######################## ADMIN #########################
+
+async def players_count():
+	with dbase:
+		return User.select().count()
+
+async def max_user_balance():
+	rbal=''
+	with dbase:
+		res = Ubalance.select().join(User).where(Ubalance.token!='DEMO').order_by(Ubalance.amount.desc()).limit(3)
+		for r in res:
+			#if r.token!='DEMO':
+			rbal+=f'<code>{r.owner.user_id}</code>: <b>{r.amount} {r.token}</b>\n'
+	return rbal
+
+
+
+
 
 ######################### USER #########################
 
@@ -31,7 +49,7 @@ async def usr_info(uid):
 	with dbase:
 		res = Ubalance.select().join(User).where(User.user_id==uid,Ubalance.marker==1).get()
 		amount_ed = format(res.amount, '.1f')
-		return res.owner.user_id, res.owner.user_name, res.owner.label, res.token, amount_ed
+		return res.owner.user_id, res.owner.user_name, res.owner.label, res.token, amount_ed, res.owner.user_vip_status
 
 
 async def update_status_account(uid,label):
@@ -82,9 +100,11 @@ async def set_active_wallet(uid,label):
 		res1 = Ubalance.select().join(User).where(User.user_id==uid,Ubalance.token==label).get()
 		res1.marker=1
 		res1.save()
-		
 
-		
+async def check_vip_status(uid):
+	with dbase:
+		res = User.select().where(User.user_id==uid).get()
+		return res.user_vip_status
 
 ######################### CASH #########################
 
@@ -144,6 +164,31 @@ async def set_deposit_status(uid,transid,status):
 ########################################################
 #######################  WITHDRAW  #####################
 
+async def withdraw_pending(uid,transid,token,amount,date,status='Pending'):
+	with dbase:
+		Uwithdraw.create(owner=uid,trans_id=transid,currency=token,amount=amount,date=date,status=status)
+
+
+async def withdraw_pending_remove(transid,status):
+	with dbase:
+		res = Uwithdraw.select().where(Uwithdraw.trans_id==transid).get()
+		res.status=status
+		res.save()
+
+
+async def withdraw_decline(transid):
+	with dbase:
+		res = Uwithdraw.select().join(User).where(Uwithdraw.trans_id==transid, Uwithdraw.status=='Pending').get()
+		res.status = 'Decline'
+		res.save()
+
+
+async def get_withdraw_details(transid):
+	with dbase:
+		res = Uwithdraw.select().join(User).where(Uwithdraw.trans_id==transid).get()
+		return res.owner.user_id, res.currency, res.amount, res.status
+
+
 
 async def set_withdraw(uid,transid,currency,amount,date,status):
 	with dbase:
@@ -182,7 +227,7 @@ async def get_winners():
 
 
 ##########################################################
-#ПЕРЕДЕЛАТЬ СТАТУС
+
 			
 		
 

@@ -15,10 +15,11 @@ from config import ADMIN
 from .kb_user.currencies_kb import tokens_kb
 from .kb_user.players_kb import kb_main
 
-from datas.bh_methods import usr_info, dep_to_balance, check_balance_selected, balance_withdraw, set_deposit, set_deposit_status, set_withdraw
+from datas.bh_methods import usr_info, dep_to_balance, check_balance_selected, balance_withdraw, set_deposit, set_deposit_status, set_withdraw, check_vip_status, withdraw_pending
 from text.interfaces import profile_info
 
 from admin.payments_methods_alt import dep_create, dep_status_check, get_min_dep, get_min_with, get_main_balance, with_create
+from admin.cmd_root import admin_approve
 
 
 class PSG(StatesGroup):
@@ -50,14 +51,14 @@ async def kb(url):
 
 async def to_cancel(message,state:FSMContext):
 	res = await usr_info(message.from_user.id)
-	await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+	await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
 	await bot.delete_message(message.from_user.id,message.message_id)
 	await state.finish()
 
 
 async def to_cancel_cb(call,state:FSMContext):
 	res = await usr_info(call.from_user.id)
-	await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+	await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
 	await state.finish()
 
 	
@@ -74,7 +75,7 @@ async def deposit_token(call,callback_data:dict,state:FSMContext):
 	if value == 'back':
 		
 		res = await usr_info(call.from_user.id)
-		await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+		await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
 		await state.finish()
 
 	else:
@@ -128,7 +129,7 @@ async def deposit_amount(message,state:FSMContext):
 		await set_deposit_status(message.from_user.id,inv_id,'not_paid')
 
 	res = await usr_info(message.from_user.id)
-	await bot.edit_message_text(f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',message.from_user.id,message.message_id+2,reply_markup = await kb_main(res[2]))
+	await bot.edit_message_text(f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',message.from_user.id,message.message_id+2,reply_markup = await kb_main(res[2]))
 	await state.finish()
 
 
@@ -143,13 +144,12 @@ async def to_withdraw(call):
 
 async def withdraw_token(call,callback_data:dict,state:FSMContext):	
 
-	value = callback_data['value']
-	
+	value = callback_data['value']	
 	
 	if value == 'back':
 		
 		res = await usr_info(call.from_user.id)
-		await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+		await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
 		await state.finish()
 
 	else:
@@ -164,7 +164,7 @@ async def withdraw_token(call,callback_data:dict,state:FSMContext):
 
 
 				res1 = await usr_info(call.from_user.id)
-				await bot.edit_message_text(f'{await profile_info(call.from_user.id,res1[0],res1[1],res1[2],res1[3],res1[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res1[2]))
+				await bot.edit_message_text(f'{await profile_info(call.from_user.id,res1[0],res1[1],res1[2],res1[3],res1[4],res1[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res1[2]))
 				await state.finish()
 
 			elif float(res)!=0.0 and float(res) >= float(min_with):
@@ -188,11 +188,14 @@ async def withdraw_amount(message,state:FSMContext):
 		min_amnt_with = float(data['with_min_amount'])#minimum amount of withdraw
 		max_amnt_with = float(data['with_max_amount'])#user_balance
 		user_id = message.from_user.id
+		vip = await check_vip_status(user_id)
 
-		trs_id = str(datetime.datetime.now().timestamp())
+		trs_id = str(datetime.datetime.now().timestamp()).replace('.','').replace('1','0').replace('6','3')
+
+		#trs_id = str(user_id)
 
 		main_balance = await get_main_balance(token)#main_balance
-
+	
 		if max_amnt_with < main_balance:
 
 			if usr_amnt_with > min_amnt_with:
@@ -206,19 +209,30 @@ async def withdraw_amount(message,state:FSMContext):
 
 				amount = min_amnt_with
 
+			if vip=='0':
+
+				await state.finish()
+				await bot.send_message(user_id,f'id <code>{trs_id}</code>: Ваша заявка на вывод средств принята в обработку.\n<i>сохраните id транзакции</i>')
+				await balance_withdraw(user_id,token,amount)
+				await withdraw_pending(user_id, trs_id, token, amount, message.date)
+
+				await admin_approve(user_id, trs_id, token, amount)
+				
+				await asyncio.sleep(5)
+				res = await usr_info(message.from_user.id)
+				await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
+
+				
+			else:
+				chst = await with_create(user_id, trs_id, token, amount)
+				await set_withdraw(user_id, chst['data']['id'], chst['data']['currency'], chst['data']['amount'], message.date, chst['success'])
+				await balance_withdraw(user_id,token,amount)
 
 
-
-
-			chst = await with_create(user_id, trs_id, token, amount)
-			await set_withdraw(user_id, chst['data']['id'], chst['data']['currency'], chst['data']['amount'], message.date, chst['success'])
-			await balance_withdraw(user_id,token,amount)
-
-
-
-			await asyncio.sleep(5)
-			res = await usr_info(message.from_user.id)
-			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+				await asyncio.sleep(5)
+				res = await usr_info(message.from_user.id)
+				await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
+				await state.finish()
 			
 
 
@@ -227,15 +241,16 @@ async def withdraw_amount(message,state:FSMContext):
 			await message.answer('вронг дата. телл зе админ абоут ит')
 			await bot.send_message(ADMIN, 'some happened wrong. user balance equal as main balance')
 			res = await usr_info(message.from_user.id)
-			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
+			await state.finish()
 
 			
 		else:
 			await message.answer('вронг дата. телл зе админ абоут ит')
 			await bot.send_message(ADMIN, ' big amount of withdraw.some happened wrong')
 			res = await usr_info(message.from_user.id)
-			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
-		await state.finish()
+			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
+			await state.finish()
 
 
 
@@ -249,7 +264,7 @@ async def spam_remover(message,state:FSMContext):
 	if message.chat.type != 'supergroup':
 		if message.text.lower() == 'reload':
 			res = await usr_info(message.from_user.id)
-			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+			await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
 			await state.finish()
 			
 		elif message.text.lower()!='cancel' or float(message.text.isdigit())!=True:

@@ -1,8 +1,13 @@
-from engine import dp
-from .cmd_root import run, pause, resume, stop
+from aiogram.dispatcher.filters import Text
+from engine import dp , cbd_adm
+from .cmd_root import admin_panel, to_core, core, approve_withdraw, decline_withdraw
+
 
 def setup():
-	dp.register_message_handler(run , commands='run', commands_prefix='!')
-	dp.register_message_handler(pause, commands='pause', commands_prefix='!')
-	dp.register_message_handler(resume, commands='resume', commands_prefix='!')
-	dp.register_message_handler(stop, commands='stop', commands_prefix='!')
+	dp.register_message_handler(admin_panel, commands='admin', commands_prefix='!')
+
+	dp.register_callback_query_handler(to_core, cbd_adm.filter(but=['1'],value=['core']))
+	dp.register_callback_query_handler(core, cbd_adm.filter(but=['2']))
+	
+	dp.register_callback_query_handler(approve_withdraw, Text(startswith='aprv_'))
+	dp.register_callback_query_handler(decline_withdraw, Text(startswith='dcln_'))

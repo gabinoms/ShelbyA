@@ -11,6 +11,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 cbd_cash = CallbackData('pref', 'but', 'value')
 cbd_cash1 = CallbackData('cash', 'jump', 'but', 'value')
 
+cbd_adm = CallbackData('adm','but','value')
+
+
 load_dotenv(find_dotenv())
 api_key = os.getenv('JAPIKEY')
 private_key = os.getenv('JAPITOKEN')

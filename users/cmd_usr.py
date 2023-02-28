@@ -1,12 +1,12 @@
 import asyncio
 from aiogram.utils.exceptions import Throttled, BotBlocked, CantInitiateConversation
-from engine import bot,dp
+from engine import bot,dp#, scheduler
 from config import CHAT
 
 
 
 
-from datas.bh_methods import usr_exists, usr_add, usr_info, check_balance, update_balance, get_current_race, set_user_bet, get_winners, update_status_account, set_current_wallet, get_active_wallets, set_active_wallet, race_create
+from datas.bh_methods import usr_exists, usr_add, usr_info, check_balance, update_balance, get_current_race, set_user_bet, get_winners, update_status_account, set_current_wallet, get_active_wallets, set_active_wallet, race_create, players_count, max_user_balance, check_vip_status
 
 from .kb_user.players_kb import kb_main, kb_settings, kb_select_token
 from text.interfaces import profile_info, settings_info
@@ -23,17 +23,23 @@ async def to_begin(message):
         if await usr_exists(message.from_user.id) == None:
             await usr_add(message.from_user.id, message.from_user.first_name)
         res = await usr_info(message.from_user.id)
-        await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+        await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
         await bot.delete_message(message.chat.id,message.message_id)
-        # a=await get_main_balance('virus')
-        # print(type(a))
+        # a = await max_user_balance()
+        # print(len(a))
+        # print(a)
+        # for axe in a:
+        #     print(axe.amount)
+        b = await check_vip_status(message.from_user.id)
+
+
 
 
 
        
 
     except (BotBlocked, CantInitiateConversation):
-        await message.reply('напиши мне в личку, у меня спамблок')
+        await message.reply('напишите <code>/start</code> мне в личку, у меня спамблок')
         await asyncio.sleep(5)
         await bot.delete_message(message.chat.id,message.message_id+1)
         await bot.delete_message(message.chat.id,message.message_id)
@@ -50,7 +56,7 @@ async def to_begin(message):
 async def to_account(message):
     res = await usr_info(message.from_user.id)
 
-    await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4])}',reply_markup = await kb_main(res[2]))
+    await bot.send_message(message.from_user.id,f'{await profile_info(message.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',reply_markup = await kb_main(res[2]))
     await bot.delete_message(message.chat.id,message.message_id)
 
     
@@ -106,7 +112,7 @@ async def up_demo(call,callback_data:dict):
         if usr_bal <=0:
             await update_balance(call.from_user.id, 1000)
             res = await usr_info(call.from_user.id)
-            await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+            await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
             await call.answer('ваш 🪙 счет успешно пополнен. приятного отдыха')
 
         elif usr_bal > 0:
@@ -116,7 +122,7 @@ async def up_demo(call,callback_data:dict):
 async def refresh(call):
     with suppress(MessageNotModified):
         res = await usr_info(call.from_user.id)
-        await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+        await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
     await call.answer()
 
 async def settings(call):
@@ -154,7 +160,7 @@ async def settings_mode(call,callback_data:dict):
 
     elif value == 'main':
         #res = await usr_info(call.from_user.id)
-        await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
+        await bot.edit_message_text(f'{await profile_info(call.from_user.id,res[0],res[1],res[2],res[3],res[4],res[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res[2]))
     await call.answer()
 
 
@@ -165,7 +171,7 @@ async def select_wallet(call):
         await call.answer(f'ваш текущий счет изменен на {res}. приятного отдыха')
 
     else:
-        await call.answer('здесь можно будет добавлять свои токены')
+        await call.answer('здесь можно будет добавлять другие токены')
         
     res1 = await usr_info(call.from_user.id)
-    await bot.edit_message_text(f'{await profile_info(call.from_user.id,res1[0],res1[1],res1[2],res1[3],res1[4])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res1[2]))
+    await bot.edit_message_text(f'{await profile_info(call.from_user.id,res1[0],res1[1],res1[2],res1[3],res1[4],res1[5])}',call.from_user.id,call.message.message_id,reply_markup = await kb_main(res1[2]))

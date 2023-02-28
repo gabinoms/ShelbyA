@@ -22,6 +22,7 @@ class BetMiddle(BaseMiddleware):
                 elif "bet" in message.text.lower():
                     await bot.delete_message(message.from_user.id,message.message_id)
                     raise CancelHandler()
+                    
 
     async def on_process_callback_query(self, call: types.CallbackQuery, data:dict):
 

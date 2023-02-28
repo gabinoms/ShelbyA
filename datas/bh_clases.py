@@ -37,7 +37,7 @@ class User(BaseMod):
 	user_id = BigIntegerField(primary_key=True)
 	user_name = CharField(default='plaYer')
 	label = CharField(default='DEMO')#DEMO or CAsH
-	#user_vip_status = IntegerField(default=0)
+	user_vip_status = CharField(default='0')
 
 
 	class Meta:
@@ -81,3 +81,4 @@ class Uwithdraw(BaseMod):
 
 	class Meta:
 		db_table='withdraws'
+

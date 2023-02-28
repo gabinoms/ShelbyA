@@ -1,14 +1,14 @@
 from datas.bh_methods import usr_info
 
-async def profile_info(uid,r0,r1,r2,r3,r4):
+async def profile_info(uid,r0,r1,r2,r3,r4,r5):
 
 #res[0] - Id 				#res[2] - label DEMO or CASH   res[4] - amount
-#res[1] - first_name		#res[3] - token     		   res[5] - marker	
+#res[1] - first_name		#res[3] - token     		   res[5] - marker	         res[6] -VIP
 
 
 	msg = f"""
 🪪 <b>account</b>\t\t\t🟢 {r2}
-
+<code>VIP</code> {r5}
 {r1}
 •
     Баланс
@@ -16,7 +16,6 @@ async def profile_info(uid,r0,r1,r2,r3,r4):
 •
 """
 	return msg
-
 
 
 async def settings_info(uid,status):
@@ -34,8 +33,8 @@ async def settings_info(uid,status):
 
 •   {led1} DEMO {led2} CAsH
 •
-•    VIP - 0
 •
 •   <code>реф сслыка</code>
 """
 	return msg
+
