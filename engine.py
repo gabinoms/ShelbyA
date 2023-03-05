@@ -15,8 +15,8 @@ cbd_adm = CallbackData('adm','but','value')
 
 
 load_dotenv(find_dotenv())
-api_key = os.getenv('JAPIKEY')
-private_key = os.getenv('JAPITOKEN')
+# api_key = os.getenv('JAPIKEY')
+# private_key = os.getenv('JAPITOKEN')
 rocketpay_key = os.getenv('ROCKETPAY')
 webh_url = os.getenv('WH_URL')
 bot = Bot(os.getenv('TOKEN'), parse_mode='HTML')

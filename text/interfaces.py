@@ -1,21 +1,30 @@
-from datas.bh_methods import usr_info
+from datas.bh_methods import usr_info, ref_count, check_vip_info
+from users.referrals.ref_methods import encoder
+from config import referral_link
 
-async def profile_info(uid,r0,r1,r2,r3,r4,r5):
 
-#res[0] - Id 				#res[2] - label DEMO or CASH   res[4] - amount
-#res[1] - first_name		#res[3] - token     		   res[5] - marker	         res[6] -VIP
+#res[0] - name + Id   #res[2] - balances   
+#res[1] - label		  
+
+async def profile_info(r0,r1,r2):
+	refs = r0.split('\t\t\t\t')[0]# uid
+	uname = r0.split('\t\t\t\t')[1]#uname
+	vip = await check_vip_info(refs)
 
 
 	msg = f"""
-🪪 <b>account</b>\t\t\t🟢 {r2}
-<code>VIP</code> {r5}
-{r1}
+🪪 <code>{refs}</code>\t\t\t🟢 {r1}
+{uname}\t\t\t\t\t\t\t\t<b>VIP</b> : {vip[0]}
+<b>vp</b> : {vip[2]}
 •
     Баланс
-•  {'💵' if r2 =='DEMO' else r3}  <code><b>{r4}</b></code>
+{r2}
 •
+Рефералы : {await ref_count(refs)}
 """
 	return msg
+
+
 
 
 async def settings_info(uid,status):
@@ -34,7 +43,8 @@ async def settings_info(uid,status):
 •   {led1} DEMO {led2} CAsH
 •
 •
-•   <code>реф сслыка</code>
+•   <i>ваша реферальная сслыка</i>
+<code>{referral_link+(await encoder(uid))}</code>
 """
 	return msg
 

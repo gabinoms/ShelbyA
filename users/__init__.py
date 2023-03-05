@@ -1,7 +1,7 @@
 from aiogram.dispatcher.filters import Text
 from engine import dp, cbd_cash, cbd_cash1
 
-from .cmd_usr import to_begin, to_account, place_bet, up_demo, refresh, settings, settings_mode, select_wallet
+from .cmd_usr import to_begin, to_account, place_bet, up_demo, claim_daily_vp, refresh, settings, settings_mode, select_wallet
 from .cmd_usr_cash import PSG, WSG, to_deposit, deposit_token, to_cancel, deposit_amount, to_cancel_cb, spam_remover, to_withdraw, withdraw_token, withdraw_amount
 
 def setup():
@@ -9,7 +9,9 @@ def setup():
 	dp.register_message_handler(to_account,commands=['acc'])
 	dp.register_message_handler(place_bet,Text(startswith='bet',ignore_case=True))
 	dp.register_callback_query_handler(up_demo, cbd_cash.filter(but=['1']))
+	dp.register_callback_query_handler(claim_daily_vp, cbd_cash.filter(but=['2'],value=['claim_vp']))
 	dp.register_callback_query_handler(refresh, cbd_cash.filter(but=['2'],value=['refresh']))
+
 	dp.register_callback_query_handler(settings, cbd_cash.filter(but=['2']))
 	dp.register_callback_query_handler(settings_mode, cbd_cash.filter(but=['3']))
 	dp.register_callback_query_handler(select_wallet,Text(startswith='select_'))

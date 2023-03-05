@@ -1,20 +1,22 @@
 from aiogram.types import InlineKeyboardMarkup as IKM, InlineKeyboardButton as IKB
 
+
 async def kb_main(status):
-	
 
 	kb_default = IKM(
 		inline_keyboard=[
-		[IKB('💵 пополнить',callback_data='pref:1:update_free')],
-		[IKB('⚙️ настройки',callback_data='pref:2:settings')],
-		[IKB('🔄 обновить',callback_data='pref:2:refresh')]
+		[IKB('💵 пополнить',callback_data='pref:1:update_free'),
+		 IKB('🎁',callback_data='pref:2:claim_vp')],
+		[IKB('🔄 обновить',callback_data='pref:2:refresh'),
+		 IKB('⚙️ настройки',callback_data='pref:2:settings')]		 
 		])
 
 	kb_cash = IKM(
 		inline_keyboard=[
 		[IKB('💎 пополнить',callback_data='pref:4:deposit'),
-		 IKB('💎 вывести',callback_data='pref:5:withdraw')],
-		[IKB('⚙️ настройки',callback_data='pref:2:settings')],
+		 IKB('🎁',callback_data='pref:2:claim_vp')],
+		[IKB('💎 вывести',callback_data='pref:5:withdraw'),		
+		 IKB('⚙️ настройки',callback_data='pref:2:settings')],
 		[IKB('🔄 обновить',callback_data='pref:2:refresh')]
 		])
 

@@ -3,7 +3,8 @@ import random
 from engine import dp,bot,scheduler
 from config import CHAT, road
 
-from datas.bh_methods import race_create, get_race_result, calculate2, get_winners, get_current_race, race_close
+from datas.bh_methods import race_create, get_race_result, calculate2, get_winners, get_current_race, race_close, calculate_bets
+from .ada_moves import stopgame
 
 import time
 
@@ -56,7 +57,7 @@ async def alarm1(dp):
     k=20
     while k >=0 :
         with suppress(MessageNotModified):
-            await asyncio.sleep(1.1)#1.2
+            await asyncio.sleep(1.2)#1.2
             await bot.edit_message_text(f"1️⃣{await (horse(h[1],'🏇'))}\n2️⃣{await (horse(h[2],'🏇'))}\n3️⃣{await (horse(h[3],'🏇'))}\n4️⃣{await (horse(h[4],'🏇'))}\n5️⃣{await (horse(h[5],'🏇'))}",CHAT,a['message_id'])
 
         for f in h.keys():
@@ -95,7 +96,20 @@ async def alarm1(dp):
 
     await asyncio.sleep(2)
     await bot.send_message(chat_id=CHAT,text=f'<code>#{race_number}</code>\nРезультаты:\n🏆 - {win[0]}\t🥈 - {win[1]}\t🥉 - {win[2]}\n\n\t\t\t\t\t\t\t\t🏅 - {win[3]}\t\t\t🏅 - {win[4]}')
-    await get_winners()
+    winners_list=''
+    wnrs = await get_winners()
+    if len(wnrs)==0:
+        winners_list='а никто не играл🤔'
+    elif len(wnrs)<=5:
+        for w in range(len(wnrs)):
+            winners_list+=f'🍾{wnrs.pop() }'
+
+    await bot.send_message(chat_id=CHAT,text=f'<code>#{race_number}</code>\nпобедители:\n {winners_list}')
+
+
+    count_of_bets = await calculate_bets(race_number)
+    if count_of_bets == 0:
+        await stopgame()
     await race_close()
 
 

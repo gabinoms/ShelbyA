@@ -1,4 +1,6 @@
 CHAT = '-1001890806109'
 ADMIN = '393348217'
 road='_'*20
-
+referral_link='https://t.me/AdaShelbot?start='
+stick01='CAACAgIAAxkBAAEIAslkBKjRDY3qOJ34pl_lFhO_dZFkwwACGQ8AAgWCQEjWQ4L7-Mn90y4E'
+stick02='CAACAgIAAxkBAAEIAsVkBKeDAUjNuWnSvMzMmVOjK2DwcgACEwwAAuLLQEgKFkvFN8GyMi4E'
